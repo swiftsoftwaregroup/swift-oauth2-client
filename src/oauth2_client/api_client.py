@@ -1,3 +1,6 @@
+"""
+API client for making authenticated API calls using OAuth2.
+"""
 import asyncio
 from typing import Dict, Any, Optional, Union, Tuple
 from pathlib import Path

@@ -1,3 +1,6 @@
+"""
+This module contains the configuration class for OAuth2 authentication.
+"""
 from dataclasses import dataclass
 from typing import List
 

@@ -1,3 +1,6 @@
+"""
+Asynchronous client for making authenticated API calls using OAuth2.
+"""
 import json
 from typing import Dict, Any, Optional, Union, Tuple
 from urllib.parse import urlencode

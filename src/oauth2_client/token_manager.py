@@ -1,3 +1,6 @@
+"""
+This module provides a class for managing OAuth2 tokens.
+"""
 import base64
 import time
 import asyncio
@@ -79,4 +82,4 @@ class TokenManager:
                 self.access_token = token_data["access_token"]
                 self.expires_at = time.time() + token_data["expires_in"] - 60  # Refresh 1 minute before expiration
             except httpx.HTTPStatusError as e:
-                raise TokenRefreshError(f"Failed to refresh token: {e}")
+                raise TokenRefreshError(f"Failed to refresh token: {e}") from e

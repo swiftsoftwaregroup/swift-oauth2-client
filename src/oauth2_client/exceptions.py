@@ -1,3 +1,6 @@
+"""
+This module contains custom exceptions for the OAuth2Client.
+"""
 class OAuth2ClientError(Exception):
     """Base exception for OAuth2Client."""
 
