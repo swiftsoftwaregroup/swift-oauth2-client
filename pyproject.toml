@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "swift-oauth2-client"
-version = "0.1.0"
+version = "0.2.0"
 description = "Make authenticated API calls using OAuth2 in Python applications"
 authors = ["Swift Software Group <hello@swiftsoftwaregroup.com>"]
 license = "Apache-2.0"
@@ -11,7 +11,7 @@ repository = "https://github.com/swiftsoftwaregroup/swift-oauth2-client"
 documentation = "https://swiftsoftwaregroup.github.io/swift-oauth2-client"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = ">=3.10,<4.0"
 httpx = "^0.27.2"
 
 [tool.poetry.dev-dependencies]

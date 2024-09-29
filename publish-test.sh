@@ -22,7 +22,7 @@ echo "Poetry has been configured with credentials for TestPyPI."
 
 # Bump the version number
 # poetry version patch  # For bug fixes
-# poetry version minor  # For new features
+poetry version minor  # For new features
 # poetry version major  # For breaking changes
 
 # Build the package
