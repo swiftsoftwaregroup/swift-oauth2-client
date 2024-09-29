@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "swift-oauth2-client"
+version = "0.1.0"
+description = "Make authenticated API calls using OAuth2 in Python applications"
+authors = ["vkantchev <vkantchev@users.noreply.github.com>"]
+license = "Apache-2.0"
+readme = "README.md"
+packages = [{include = "oauth2_client", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+httpx = "^0.27.2"
+
+[tool.poetry.dev-dependencies]
+pytest = "^8.3.3"
+pytest-mock = "^3.14.0"
+pytest-asyncio = "^0.21.0"
+respx = "^0.21.1"
+mkdocs = "^1.6.0"
+mkdocs-material = "^9.5.30"
+mkdocstrings = {extras = ["python"], version = "^0.25.1"}
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
