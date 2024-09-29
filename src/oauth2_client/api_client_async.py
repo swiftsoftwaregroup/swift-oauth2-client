@@ -9,7 +9,7 @@ from pathlib import Path
 import httpx
 
 from .config import OAuth2Config
-from .token_manager import TokenManager
+from .token_manager_async import TokenManagerAsync
 from .exceptions import APIError
 
 class APIClientAsync:
@@ -41,7 +41,7 @@ class APIClientAsync:
             base_url (str): The base URL for API calls.
         """
         self.base_url = base_url
-        self.token_manager = TokenManager(config) if config else None
+        self.token_manager = TokenManagerAsync(config) if config else None
         self.http_client = httpx.AsyncClient(follow_redirects=True)
 
     async def call_api(self, method: str, path: str, body: Any = None, additional_headers: Optional[Dict[str, str]] = None) -> Tuple[Union[bytes, str, Dict], int]:

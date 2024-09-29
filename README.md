@@ -61,7 +61,7 @@ For more comprehensive examples, check out the `examples/oauth2_client_example_a
 
 ## Documentation
 
-For detailed documentation, including API reference and usage guides, visit our [documentation site](https://your-documentation-url.com).
+For detailed documentation, including API reference and usage guides, visit our [documentation site](https://swiftsoftwaregroup.github.io/swift-oauth2-client).
 
 ## Development
 

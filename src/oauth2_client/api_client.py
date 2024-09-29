@@ -1,11 +1,13 @@
 """
-API client for making authenticated API calls using OAuth2.
+A synchronous client for making authenticated API calls using OAuth2.
 """
 import asyncio
 from typing import Dict, Any, Optional, Union, Tuple
 from pathlib import Path
 from .config import OAuth2Config
+
 from .api_client_async import APIClientAsync
+from .token_manager import TokenManager
 
 class APIClient:
     """
@@ -15,16 +17,8 @@ class APIClient:
     an asynchronous client.
 
     Attributes:
-        _async_client (APIClientAsync): The underlying asynchronous APIClient.
-        _loop (asyncio.AbstractEventLoop): The event loop used to run async calls.
-
-    Example:
-        ```python
-        config = OAuth2Config(...)
-        client = APIClient(config, "https://api.example.com")
-        response, status = client.call_api("GET", "/users")
-        client.close()
-        ```
+        token_manager (TokenManager): Manages OAuth2 tokens synchronously.
+        async_client (APIClientAsync): The underlying asynchronous client.
     """
 
     def __init__(self, config: Optional[OAuth2Config], base_url: str):
@@ -36,7 +30,8 @@ class APIClient:
             base_url (str): The base URL for API calls.
         """
         self._loop = asyncio.new_event_loop()
-        self._async_client = self._loop.run_until_complete(APIClientAsync(config, base_url).__aenter__())
+        self.async_client = self._loop.run_until_complete(APIClientAsync(config, base_url).__aenter__())
+        self.token_manager = TokenManager(self.async_client.token_manager, self._loop)
 
     def call_api(self, method: str, path: str, body: Any = None, additional_headers: Optional[Dict[str, str]] = None) -> Tuple[Union[bytes, str, Dict], int]:
         """
@@ -53,11 +48,11 @@ class APIClient:
 
         Example:
             ```python
-            response, status = client.call_api("GET", "/users")
-            print(f"Status: {status}, Response: {response}")
+            response, status_code = client.call_api("GET", "/users")
+            print(f"Status: {status_code}, Response: {response}")
             ```
         """
-        return self._loop.run_until_complete(self._async_client.call_api(method, path, body, additional_headers))
+        return self._loop.run_until_complete(self.async_client.call_api(method, path, body, additional_headers))
 
     def download_file(self, method: str, path: str, body: Any = None, additional_headers: Optional[Dict[str, str]] = None, dest_path: Optional[Union[str, Path]] = None) -> Union[str, bytes]:
         """
@@ -79,24 +74,15 @@ class APIClient:
             print(result)
             ```
         """
-        return self._loop.run_until_complete(self._async_client.download_file(method, path, body, additional_headers, dest_path))
+        return self._loop.run_until_complete(self.async_client.download_file(method, path, body, additional_headers, dest_path))
 
     def close(self):
         """
         Close the client and its underlying resources.
 
         This method should be called when the client is no longer needed.
-
-        Example:
-            ```python
-            client = APIClient(...)
-            try:
-                # Use the client...
-            finally:
-                client.close()
-            ```
         """
-        self._loop.run_until_complete(self._async_client.__aexit__(None, None, None))
+        self._loop.run_until_complete(self.async_client.__aexit__(None, None, None))
         self._loop.close()
 
     def __enter__(self):

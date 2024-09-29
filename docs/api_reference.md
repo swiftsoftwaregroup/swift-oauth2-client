@@ -2,35 +2,30 @@
 
 This page contains the complete API reference for the Swift OAuth2 Client.
 
-## Configuration
-
 ::: oauth2_client.config.OAuth2Config
     options:
       show_root_heading: true
       show_source: false
-
-## API Client (Synchronous)
 
 ::: oauth2_client.api_client.APIClient
     options:
       show_root_heading: true
       show_source: false
 
-## API Client (Asynchronous)
+::: oauth2_client.token_manager.TokenManager
+    options:
+      show_root_heading: true
+      show_source: false
 
 ::: oauth2_client.api_client_async.APIClientAsync
     options:
       show_root_heading: true
       show_source: false
 
-## Token Manager
-
-::: oauth2_client.token_manager.TokenManager
+::: oauth2_client.token_manager_async.TokenManagerAsync
     options:
       show_root_heading: true
       show_source: false
-
-## Exceptions
 
 ::: oauth2_client.exceptions
     options:

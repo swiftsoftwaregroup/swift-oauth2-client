@@ -1,85 +1,127 @@
 """
-This module provides a class for managing OAuth2 tokens.
+A synchronous wrapper for the asynchronous TokenManagerAsync class.
 """
-import base64
-import time
 import asyncio
-import httpx
-from .config import OAuth2Config
-from .exceptions import TokenRefreshError
+from .token_manager_async import TokenManagerAsync
 
 class TokenManager:
     """
-    Manages OAuth2 token acquisition and renewal.
+    A synchronous wrapper for the asynchronous TokenManagerAsync class.
 
-    This class is responsible for obtaining and refreshing OAuth2 tokens
-    as needed for API authentication.
+    This class provides a blocking, synchronous interface for acquiring and refreshing
+    OAuth2 tokens, using an asyncio event loop to run the asynchronous methods of
+    TokenManagerAsync.
 
     Attributes:
-        config (OAuth2Config): The OAuth2 configuration.
-        access_token (str): The current access token.
-        expires_at (float): The expiration time of the current token.
-        lock (asyncio.Lock): A lock for thread-safe token refresh operations.
+        _async_token_manager (TokenManagerAsync): An instance of the TokenManagerAsync class.
+        _loop (asyncio.AbstractEventLoop): The asyncio event loop to run async methods.
 
-    Example:
+    Example usage:
         ```python
-        config = OAuth2Config(...)
-        token_manager = TokenManager(config)
-        token = await token_manager.get_valid_token()
+        import asyncio
+        from token_manager import TokenManager
+        from token_manager_async import TokenManagerAsync
+        from config import OAuth2Config
+
+        # Step 1: Initialize the OAuth2 configuration
+        config = OAuth2Config(
+            client_id="your_client_id",
+            client_secret="your_client_secret",
+            token_url="https://oauth2-server.com/token",
+            scopes=["scope1", "scope2"]
+        )
+
+        # Step 2: Create an instance of TokenManagerAsync with the configuration
+        async_token_manager = TokenManagerAsync(config)
+
+        # Step 3: Get an asyncio event loop (or create a new one)
+        loop = asyncio.get_event_loop()
+
+        # Step 4: Initialize the TokenManager with the async token manager and the event loop
+        token_manager = TokenManager(async_token_manager=async_token_manager, loop=loop)
+
+        # Step 5: Use the TokenManager to get a valid token synchronously
+        token = token_manager.get_valid_token()
+
+        # Output the token
+        print(f"Access Token: {token}")
         ```
     """
 
-    def __init__(self, config: OAuth2Config):
+    def __init__(self, async_token_manager: TokenManagerAsync, loop: asyncio.AbstractEventLoop):
         """
-        Initialize the TokenManager.
+        Initializes the TokenManager with an async token manager and event loop.
 
         Args:
-            config (OAuth2Config): The OAuth2 configuration.
+            async_token_manager (TokenManagerAsync): The asynchronous token manager responsible
+                for managing tokens.
+            loop (asyncio.AbstractEventLoop): The asyncio event loop used to run async tasks.
         """
-        self.config = config
-        self.access_token = None
-        self.expires_at = 0
-        self.lock = asyncio.Lock()
+        self._async_token_manager = async_token_manager
+        self._loop = loop
 
-    async def get_valid_token(self) -> str:
+    def get_valid_token(self) -> str:
         """
-        Get a valid OAuth2 token, refreshing if necessary.
+        Retrieves a valid OAuth2 token synchronously, refreshing it if necessary.
+
+        This method wraps the async get_valid_token method from TokenManagerAsync and
+        runs it in the provided event loop.
 
         Returns:
             str: A valid OAuth2 access token.
-
-        Raises:
-            TokenRefreshError: If token refresh fails.
         """
-        async with self.lock:
-            if time.time() >= self.expires_at:
-                await self.refresh_token()
-            return self.access_token
+        future = asyncio.ensure_future(self._async_token_manager.get_valid_token(), loop=self._loop)
+        return self._loop.run_until_complete(future)
 
-    async def refresh_token(self):
+    @property
+    def access_token(self) -> str:
         """
-        Refresh the OAuth2 token.
+        Accesses the current OAuth2 access token.
 
-        This method obtains a new access token from the OAuth2 server.
-
-        Raises:
-            TokenRefreshError: If token refresh fails.
+        Returns:
+            str: The current OAuth2 access token.
         """
-        auth = base64.b64encode(f"{self.config.client_id}:{self.config.client_secret}".encode()).decode()
-        headers = {
-            "Authorization": f"Basic {auth}",
-            "Content-Type": "application/x-www-form-urlencoded"
-        }
-        data = {
-            "grant_type": "client_credentials",
-            "scope": " ".join(self.config.scopes)
-        }
-        async with httpx.AsyncClient() as client:
-            try:
-                response = await client.post(self.config.token_url, headers=headers, data=data)
-                response.raise_for_status()
-                token_data = response.json()
-                self.access_token = token_data["access_token"]
-                self.expires_at = time.time() + token_data["expires_in"] - 60  # Refresh 1 minute before expiration
-            except httpx.HTTPStatusError as e:
-                raise TokenRefreshError(f"Failed to refresh token: {e}") from e
+        return self._async_token_manager.access_token
+
+    @access_token.setter
+    def access_token(self, value: str):
+        """
+        Sets the current OAuth2 access token.
+
+        Args:
+            value (str): The new access token.
+        """
+        self._async_token_manager.access_token = value
+
+    @property
+    def expires_at(self) -> float:
+        """
+        Accesses the expiration time of the current OAuth2 access token.
+
+        Returns:
+            float: The expiration time of the token in UNIX time.
+        """
+        return self._async_token_manager.expires_at
+
+    @expires_at.setter
+    def expires_at(self, value: float):
+        """
+        Sets the expiration time of the current OAuth2 access token.
+
+        Args:
+            value (float): The new expiration time in UNIX time.
+        """
+        self._async_token_manager.expires_at = value
+
+    def refresh_token(self):
+        """
+        Refreshes the OAuth2 access token synchronously.
+
+        This method wraps the async refresh_token method from TokenManagerAsync and
+        runs it in the provided event loop.
+
+        Returns:
+            None
+        """
+        future = asyncio.ensure_future(self._async_token_manager.refresh_token(), loop=self._loop)
+        return self._loop.run_until_complete(future)
