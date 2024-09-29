@@ -2,10 +2,13 @@
 name = "swift-oauth2-client"
 version = "0.1.0"
 description = "Make authenticated API calls using OAuth2 in Python applications"
-authors = ["vkantchev <vkantchev@users.noreply.github.com>"]
+authors = ["Swift Software Group <hello@swiftsoftwaregroup.com>"]
 license = "Apache-2.0"
 readme = "README.md"
 packages = [{include = "oauth2_client", from = "src"}]
+homepage = "https://github.com/swiftsoftwaregroup/swift-oauth2-client"
+repository = "https://github.com/swiftsoftwaregroup/swift-oauth2-client"
+documentation = "https://swiftsoftwaregroup.github.io/swift-oauth2-client"
 
 [tool.poetry.dependencies]
 python = "^3.12"
