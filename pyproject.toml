@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "swift-oauth2-client"
-version = "0.3.0"
+version = "0.4.0"
 description = "Make authenticated API calls using OAuth2 in Python applications"
 authors = ["Swift Software Group <hello@swiftsoftwaregroup.com>"]
 license = "Apache-2.0"
