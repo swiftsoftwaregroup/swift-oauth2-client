@@ -15,10 +15,27 @@ pip install swift-oauth2-client
 Here's a quick example of how to use Swift OAuth2 Client:
 
 ```python
-import asyncio
 from oauth2_client import OAuth2Config, new_api_client
 
-async def main() -> None:
+config = OAuth2Config(
+    token_url="https://api.example.com/oauth/token",
+    client_id="your_client_id",
+    client_secret="your_client_secret",
+    scopes=["read", "write"]
+)
+
+with new_api_client(config, "https://api.example.com") as client:
+    response, status = client.call_api("GET", "/users")
+    print(f"Status: {status}, Response: {response}")
+```
+
+Asynchronous usage:
+
+```python
+import asyncio
+from oauth2_client import OAuth2Config, new_api_client_async
+
+async def main():
     config = OAuth2Config(
         token_url="https://api.example.com/oauth/token",
         client_id="your_client_id",
@@ -26,9 +43,9 @@ async def main() -> None:
         scopes=["read", "write"]
     )
 
-    async with new_api_client(config, "https://api.example.com") as client:
-        response, status_code = await client.call_api("GET", "/api/resource")
-        print(f"Response (status {status_code}): {response}")
+    async with new_api_client_async(config, "https://api.example.com") as client:
+        response, status = await client.call_api("GET", "/users")
+        print(f"Status: {status}, Response: {response}")
 
 asyncio.run(main())
 ```
