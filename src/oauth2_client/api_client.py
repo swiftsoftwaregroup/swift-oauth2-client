@@ -1,29 +1,26 @@
-import json
+import asyncio
 from typing import Dict, Any, Optional, Union, Tuple
-from urllib.parse import urlencode
-import httpx
 from pathlib import Path
 from .config import OAuth2Config
-from .token_manager import TokenManager
-from .exceptions import APIError
+from .api_client_async import APIClientAsync
 
 class APIClient:
     """
     Client for making authenticated API calls using OAuth2.
 
-    This class handles API calls, including automatic token management
-    and request/response processing.
+    This class provides a synchronous interface for API calls, internally using
+    an asynchronous client.
 
     Attributes:
-        base_url (str): The base URL for API calls.
-        token_manager (TokenManager): Manages OAuth2 tokens.
-        http_client (httpx.AsyncClient): Asynchronous HTTP client.
+        _async_client (APIClientAsync): The underlying asynchronous APIClient.
+        _loop (asyncio.AbstractEventLoop): The event loop used to run async calls.
 
     Example:
         ```python
         config = OAuth2Config(...)
-        async with new_api_client(config, "https://api.example.com") as client:
-            response, status = await client.call_api("GET", "/users")
+        client = APIClient(config, "https://api.example.com")
+        response, status = client.call_api("GET", "/users")
+        client.close()
         ```
     """
 
@@ -35,13 +32,12 @@ class APIClient:
             config (Optional[OAuth2Config]): OAuth2 configuration. If None, no authentication is used.
             base_url (str): The base URL for API calls.
         """
-        self.base_url = base_url
-        self.token_manager = TokenManager(config) if config else None
-        self.http_client = httpx.AsyncClient(follow_redirects=True)
+        self._loop = asyncio.new_event_loop()
+        self._async_client = self._loop.run_until_complete(APIClientAsync(config, base_url).__aenter__())
 
-    async def call_api(self, method: str, path: str, body: Any = None, additional_headers: Optional[Dict[str, str]] = None) -> Tuple[Union[bytes, str, Dict], int]:
+    def call_api(self, method: str, path: str, body: Any = None, additional_headers: Optional[Dict[str, str]] = None) -> Tuple[Union[bytes, str, Dict], int]:
         """
-        Make an authenticated API call.
+        Make an API call.
 
         Args:
             method (str): HTTP method (e.g., "GET", "POST").
@@ -52,47 +48,15 @@ class APIClient:
         Returns:
             Tuple[Union[bytes, str, Dict], int]: Response body and status code.
 
-        Raises:
-            APIError: If the API call fails.
-
         Example:
             ```python
-            response, status = await client.call_api("GET", "/users")
+            response, status = client.call_api("GET", "/users")
             print(f"Status: {status}, Response: {response}")
             ```
         """
-        headers = additional_headers.copy() if additional_headers else {}
-        
-        if self.token_manager:
-            token = await self.token_manager.get_valid_token()
-            headers["Authorization"] = f"Bearer {token}"
+        return self._loop.run_until_complete(self._async_client.call_api(method, path, body, additional_headers))
 
-        if isinstance(body, str):
-            headers.setdefault("Content-Type", "text/plain")
-        elif isinstance(body, bytes):
-            headers.setdefault("Content-Type", "application/octet-stream")
-        elif isinstance(body, dict):
-            body = urlencode(body)
-            headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
-        elif body is not None:
-            body = json.dumps(body)
-            headers.setdefault("Content-Type", "application/json")
-
-        try:
-            response = await self.http_client.request(method, self.base_url + path, content=body, headers=headers)
-            response.raise_for_status()
-        except httpx.HTTPStatusError as e:
-            raise APIError(f"API call failed: {e}")
-
-        content_type = response.headers.get("Content-Type", "")
-        if "application/json" in content_type:
-            return response.json(), response.status_code
-        elif "text/" in content_type:
-            return response.text, response.status_code
-        else:
-            return response.content, response.status_code
-
-    async def download_file(self, method: str, path: str, body: Any = None, additional_headers: Optional[Dict[str, str]] = None, dest_path: Optional[Union[str, Path]] = None) -> Union[str, bytes]:
+    def download_file(self, method: str, path: str, body: Any = None, additional_headers: Optional[Dict[str, str]] = None, dest_path: Optional[Union[str, Path]] = None) -> Union[str, bytes]:
         """
         Download a file from the API.
 
@@ -108,35 +72,52 @@ class APIClient:
 
         Example:
             ```python
-            result = await client.download_file("GET", "/files/document.pdf", dest_path="local_document.pdf")
+            result = client.download_file("GET", "/files/document.pdf", dest_path="local_document.pdf")
             print(result)
             ```
         """
-        content, _ = await self.call_api(method, path, body, additional_headers)
+        return self._loop.run_until_complete(self._async_client.download_file(method, path, body, additional_headers, dest_path))
 
-        if dest_path:
-            dest_path = Path(dest_path)
-            if isinstance(content, str):
-                dest_path.write_text(content)
-            elif isinstance(content, bytes):
-                dest_path.write_bytes(content)
-            else:  # For JSON content
-                dest_path.write_text(json.dumps(content, indent=2))
-            return f"File downloaded successfully as {dest_path}"
-        else:
-            return content
+    def close(self):
+        """
+        Close the client and its underlying resources.
 
-    async def close(self):
-        """Close the HTTP client session."""
-        await self.http_client.aclose()
+        This method should be called when the client is no longer needed.
 
-    async def __aenter__(self):
-        """Async context manager entry."""
+        Example:
+            ```python
+            client = APIClient(...)
+            try:
+                # Use the client...
+            finally:
+                client.close()
+            ```
+        """
+        self._loop.run_until_complete(self._async_client.__aexit__(None, None, None))
+        self._loop.close()
+
+    def __enter__(self):
+        """
+        Enter the runtime context related to this object.
+
+        Returns:
+            APIClient: The client instance.
+
+        Example:
+            ```python
+            with APIClient(config, "https://api.example.com") as client:
+                response, status = client.call_api("GET", "/users")
+            ```
+        """
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Async context manager exit."""
-        await self.close()
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Exit the runtime context related to this object.
+
+        This method calls `close()` to ensure all resources are properly released.
+        """
+        self.close()
 
 def new_api_client(config: Optional[OAuth2Config], base_url: str) -> APIClient:
     """

@@ -1,7 +1,7 @@
 import pytest
 import respx
 import httpx
-from oauth2_client import OAuth2Config, new_api_client
+from oauth2_client import OAuth2Config, new_api_client_async
 from oauth2_client.exceptions import TokenRefreshError, APIError
 
 @pytest.fixture
@@ -27,7 +27,7 @@ async def test_token_refresh(oauth2_config, base_url):
         })
     )
 
-    async with new_api_client(oauth2_config, base_url) as client:
+    async with new_api_client_async(oauth2_config, base_url) as client:
         token = await client.token_manager.get_valid_token()
         assert token == "test_access_token"
 
@@ -38,7 +38,7 @@ async def test_token_refresh_error(oauth2_config, base_url):
         return_value=httpx.Response(400, json={"error": "invalid_client"})
     )
 
-    async with new_api_client(oauth2_config, base_url) as client:
+    async with new_api_client_async(oauth2_config, base_url) as client:
         with pytest.raises(TokenRefreshError):
             await client.token_manager.get_valid_token()
 
@@ -55,7 +55,7 @@ async def test_api_call_success(oauth2_config, base_url):
         return_value=httpx.Response(200, json={"message": "Success"})
     )
 
-    async with new_api_client(oauth2_config, base_url) as client:
+    async with new_api_client_async(oauth2_config, base_url) as client:
         response, status_code = await client.call_api("GET", "/api/test")
         assert status_code == 200
         assert response == {"message": "Success"}
@@ -73,7 +73,7 @@ async def test_api_call_error(oauth2_config, base_url):
         return_value=httpx.Response(404, json={"error": "Not found"})
     )
 
-    async with new_api_client(oauth2_config, base_url) as client:
+    async with new_api_client_async(oauth2_config, base_url) as client:
         with pytest.raises(APIError):
             await client.call_api("GET", "/api/test")
 
@@ -90,7 +90,7 @@ async def test_download_file(oauth2_config, base_url, tmp_path):
         return_value=httpx.Response(200, content=b"file content")
     )
 
-    async with new_api_client(oauth2_config, base_url) as client:
+    async with new_api_client_async(oauth2_config, base_url) as client:
         dest_path = tmp_path / "downloaded_file.txt"
         result = await client.download_file("GET", "/api/download", dest_path=dest_path)
         assert result == f"File downloaded successfully as {dest_path}"
@@ -121,7 +121,7 @@ async def test_different_content_types(oauth2_config, base_url):
         return_value=httpx.Response(200, content=b"\x00\x01\x02", headers={"Content-Type": "application/octet-stream"})
     )
 
-    async with new_api_client(oauth2_config, base_url) as client:
+    async with new_api_client_async(oauth2_config, base_url) as client:
         # Test JSON response
         response, status_code = await client.call_api("GET", "/api/json")
         assert status_code == 200
@@ -142,7 +142,7 @@ async def test_token_expiration(oauth2_config, base_url, mocker):
     mock_time = mocker.patch('time.time')
     mock_time.return_value = 0
 
-    async with new_api_client(oauth2_config, base_url) as client:
+    async with new_api_client_async(oauth2_config, base_url) as client:
         client.token_manager.access_token = "old_token"
         client.token_manager.expires_at = 100
 

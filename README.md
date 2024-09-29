@@ -22,10 +22,27 @@ pip install swift-oauth2-client
 Here's a basic example of how to use the Swift OAuth2 Client:
 
 ```python
-import asyncio
 from oauth2_client import OAuth2Config, new_api_client
 
-async def main() -> None:
+config = OAuth2Config(
+    token_url="https://api.example.com/oauth/token",
+    client_id="your_client_id",
+    client_secret="your_client_secret",
+    scopes=["read", "write"]
+)
+
+with new_api_client(config, "https://api.example.com") as client:
+    response, status = client.call_api("GET", "/users")
+    print(f"Status: {status}, Response: {response}")
+```
+
+Asynchronous usage:
+
+```python
+import asyncio
+from oauth2_client import OAuth2Config, new_api_client_async
+
+async def main():
     config = OAuth2Config(
         token_url="https://api.example.com/oauth/token",
         client_id="your_client_id",
@@ -33,18 +50,14 @@ async def main() -> None:
         scopes=["read", "write"]
     )
 
-    async with new_api_client(config, "https://api.example.com") as client:
-        try:
-            response, status_code = await client.call_api("GET", "/api/resource")
-            print(f"Response (status {status_code}): {response}")
-        except Exception as e:
-            print(f"Error: {str(e)}")
+    async with new_api_client_async(config, "https://api.example.com") as client:
+        response, status = await client.call_api("GET", "/users")
+        print(f"Status: {status}, Response: {response}")
 
-if __name__ == "__main__":
-    asyncio.run(main())
+asyncio.run(main())
 ```
 
-For a more comprehensive example, check out the `examples/oauth2_client_example.py` file in the repository.
+For more comprehensive examples, check out the `examples/oauth2_client_example_async.py` and `examples/oauth2_client_example.py`files in the repository.
 
 ## Documentation
 
@@ -58,8 +71,12 @@ To set up the development environment:
 2. Clone the repository
 3. Run `poetry install` to install dependencies
 4. Run tests with `poetry run pytest`
-5. Build documentation with `poetry run mkdocs build` 
-1. Serve the documentation with `poetry run mkdocs serve`. Then open a web browser and go to [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
+ 
+## Docs
+
+1. Build documentation with `poetry run mkdocs build` 
+2. Serve the documentation with `poetry run mkdocs serve`. 
+3. Open a web browser and go to [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
 
 ## License
 

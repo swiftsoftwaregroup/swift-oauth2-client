@@ -1,8 +1,9 @@
+import asyncio
 import os
-from oauth2_client import OAuth2Config, new_api_client
+from oauth2_client import OAuth2Config, new_api_client_async
 from oauth2_client.exceptions import OAuth2ClientError
 
-def main():
+async def main():
     # Configure the OAuth2 client
     config = OAuth2Config(
         token_url="https://api.example.com/oauth/token",
@@ -13,27 +14,27 @@ def main():
     base_url = "https://api.example.com"
 
     try:
-        with new_api_client(config, base_url) as client:
+        async with new_api_client_async(config, base_url) as client:
             # Make a GET request
             print("Making a GET request...")
-            response, status_code = client.call_api("GET", "/api/user")
+            response, status_code = await client.call_api("GET", "/api/user")
             print(f"Response (status {status_code}):")
             print(response)
 
             # Make a POST request
             print("\nMaking a POST request...")
             data = {"name": "John Doe", "email": "john@example.com"}
-            response, status_code = client.call_api("POST", "/api/user", body=data)
+            response, status_code = await client.call_api("POST", "/api/user", body=data)
             print(f"Response (status {status_code}):")
             print(response)
 
             # Download a file
             print("\nDownloading a file...")
-            result = client.download_file("GET", "/api/document", dest_path="downloaded_document.pdf")
+            result = await client.download_file("GET", "/api/document", dest_path="downloaded_document.pdf")
             print(result)
 
     except OAuth2ClientError as e:
         print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
