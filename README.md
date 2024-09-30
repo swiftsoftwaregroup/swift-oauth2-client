@@ -1,5 +1,7 @@
 # Swift OAuth2 Client
 
+[![PyPI version](https://badge.fury.io/py/swift-oauth2-client.svg)](https://badge.fury.io/py/swift-oauth2-client)
+
 Swift OAuth2 Client is a Python SDK that provides a simple and efficient way to interact with OAuth2-protected APIs. It handles token management, API calls, and file downloads with support for asynchronous operations.
 
 ## Features
@@ -71,7 +73,7 @@ To set up the development environment:
 2. Clone the repository
 3. Run `poetry install` to install dependencies
 4. Run tests with `poetry run pytest`
- 
+
 ## Docs
 
 1. Build documentation with `poetry run mkdocs build` 
