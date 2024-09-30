@@ -1344,11 +1344,11 @@ an asynchronous client.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><span title="typing.Tuple">Tuple</span>[<span title="typing.Union">Union</span>[bytes, str, <span title="typing.Dict">Dict</span>], int]</code>
+                  <code><span title="typing.Tuple">Tuple</span>[<span title="typing.Union">Union</span>[bytes, str, <span title="typing.Dict">Dict</span>], int, str]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Tuple[Union[bytes, str, Dict], int]: Response body and status code.</p>
+                <p>Tuple[Union[bytes, str, Dict], int, str]: Response body, status code, and content type.</p>
               </div>
             </td>
           </tr>
@@ -1358,8 +1358,8 @@ an asynchronous client.</p>
 
 <details class="example" open>
   <summary>Example</summary>
-  <pre><code class="language-python">response, status_code = client.call_api(&quot;GET&quot;, &quot;/users&quot;)
-print(f&quot;Status: {status_code}, Response: {response}&quot;)
+  <pre><code class="language-python">response, status, content_type = client.call_api(&quot;GET&quot;, &quot;/users&quot;)
+print(f&quot;Status: {status}, Content-Type: {content_type}, Response: {response}&quot;)
 </code></pre>
 </details>
     </div>
@@ -2154,11 +2154,11 @@ async with APIClientAsync(config, &quot;https://api.example.com&quot;) as client
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><span title="typing.Tuple">Tuple</span>[<span title="typing.Union">Union</span>[bytes, str, <span title="typing.Dict">Dict</span>], int]</code>
+                  <code><span title="typing.Tuple">Tuple</span>[<span title="typing.Union">Union</span>[bytes, str, <span title="typing.Dict">Dict</span>], int, str]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Tuple[Union[bytes, str, Dict], int]: Response body and status code.</p>
+                <p>Tuple[Union[bytes, str, Dict], int, str]: Response body, status code, and content type.</p>
               </div>
             </td>
           </tr>
@@ -2191,8 +2191,8 @@ async with APIClientAsync(config, &quot;https://api.example.com&quot;) as client
 
 <details class="example" open>
   <summary>Example</summary>
-  <pre><code class="language-python">response, status = await client.call_api(&quot;GET&quot;, &quot;/users&quot;)
-print(f&quot;Status: {status}, Response: {response}&quot;)
+  <pre><code class="language-python">response, status, content_type = await client.call_api(&quot;GET&quot;, &quot;/users&quot;)
+print(f&quot;Status: {status}, Content-Type: {content_type}, Response: {response}&quot;)
 </code></pre>
 </details>
     </div>
