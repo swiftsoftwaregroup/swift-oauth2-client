@@ -359,8 +359,8 @@ config = OAuth2Config(
 )
 
 with new_api_client(config, &quot;https://api.example.com&quot;) as client:
-    response, status = client.call_api(&quot;GET&quot;, &quot;/users&quot;)
-    print(f&quot;Status: {status}, Response: {response}&quot;)
+    response, status, content_type = client.call_api(&quot;GET&quot;, &quot;/users&quot;)
+    print(f&quot;Status: {status}, Content Type: {content_type}, Response: {response}&quot;)
 </code></pre>
 <p>Asynchronous usage:</p>
 <pre><code class="language-python">import asyncio
@@ -375,8 +375,8 @@ async def main():
     )
 
     async with new_api_client_async(config, &quot;https://api.example.com&quot;) as client:
-        response, status = await client.call_api(&quot;GET&quot;, &quot;/users&quot;)
-        print(f&quot;Status: {status}, Response: {response}&quot;)
+        response, status, content_type = await client.call_api(&quot;GET&quot;, &quot;/users&quot;)
+        print(f&quot;Status: {status}, Content Type: {content_type}, Response: {response}&quot;)
 
 asyncio.run(main())
 </code></pre>
