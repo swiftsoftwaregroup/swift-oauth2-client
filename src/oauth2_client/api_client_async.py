@@ -44,7 +44,7 @@ class APIClientAsync:
         self.token_manager = TokenManagerAsync(config) if config else None
         self.http_client = httpx.AsyncClient(follow_redirects=True)
 
-    async def call_api(self, method: str, path: str, body: Any = None, additional_headers: Optional[Dict[str, str]] = None) -> Tuple[Union[bytes, str, Dict], int]:
+    async def call_api(self, method: str, path: str, body: Any = None, additional_headers: Optional[Dict[str, str]] = None) -> Tuple[Union[bytes, str, Dict], int, str]:
         """
         Make an authenticated API call.
 
@@ -55,15 +55,15 @@ class APIClientAsync:
             additional_headers (Optional[Dict[str, str]], optional): Additional HTTP headers. Defaults to None.
 
         Returns:
-            Tuple[Union[bytes, str, Dict], int]: Response body and status code.
+            Tuple[Union[bytes, str, Dict], int, str]: Response body, status code, and content type.
 
         Raises:
             APIError: If the API call fails.
 
         Example:
             ```python
-            response, status = await client.call_api("GET", "/users")
-            print(f"Status: {status}, Response: {response}")
+            response, status, content_type = await client.call_api("GET", "/users")
+            print(f"Status: {status}, Content-Type: {content_type}, Response: {response}")
             ```
         """
         headers = additional_headers.copy() if additional_headers else {}
@@ -72,30 +72,50 @@ class APIClientAsync:
             token = await self.token_manager.get_valid_token()
             headers["Authorization"] = f"Bearer {token}"
 
-        if isinstance(body, str):
-            headers.setdefault("Content-Type", "text/plain")
-        elif isinstance(body, bytes):
-            headers.setdefault("Content-Type", "application/octet-stream")
-        elif isinstance(body, dict):
-            body = urlencode(body)
-            headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
-        elif body is not None:
-            body = json.dumps(body)
-            headers.setdefault("Content-Type", "application/json")
+        content_type = headers.get("Content-Type")
+
+        if body is not None:
+            if isinstance(body, dict):
+                if content_type is None:
+                    headers["Content-Type"] = "application/json"
+                    data = json.dumps(body)
+                elif content_type == "application/x-www-form-urlencoded":
+                    data = urlencode(body)
+                elif content_type == "application/json":
+                    data = json.dumps(body)
+                else:
+                    data = body
+            elif isinstance(body, str):
+                if content_type is None:
+                    headers["Content-Type"] = "text/plain"
+                data = body
+            elif isinstance(body, bytes):
+                if content_type is None:
+                    headers["Content-Type"] = "application/octet-stream"
+                data = body
+            else:
+                data = body
+        else:
+            data = None
 
         try:
-            response = await self.http_client.request(method, self.base_url + path, content=body, headers=headers)
+            response = await self.http_client.request(
+                method, 
+                self.base_url + path, 
+                content=data, 
+                headers=headers
+            )
             response.raise_for_status()
         except httpx.HTTPStatusError as e:
             raise APIError(f"API call failed: {e}") from e
 
         content_type = response.headers.get("Content-Type", "")
         if "application/json" in content_type:
-            return response.json(), response.status_code
+            return response.json(), response.status_code, content_type
         elif "text/" in content_type:
-            return response.text, response.status_code
+            return response.text, response.status_code, content_type
         else:
-            return response.content, response.status_code
+            return response.content, response.status_code, content_type
 
     async def download_file(self, method: str, path: str, body: Any = None, additional_headers: Optional[Dict[str, str]] = None, dest_path: Optional[Union[str, Path]] = None) -> Union[str, bytes]:
         """
@@ -117,7 +137,7 @@ class APIClientAsync:
             print(result)
             ```
         """
-        content, _ = await self.call_api(method, path, body, additional_headers)
+        content, _, _ = await self.call_api(method, path, body, additional_headers)
 
         if dest_path:
             dest_path = Path(dest_path)
@@ -127,7 +147,7 @@ class APIClientAsync:
                 dest_path.write_bytes(content)
             else:  # For JSON content
                 dest_path.write_text(json.dumps(content, indent=2), encoding="utf-8")
-            return f"File downloaded successfully as {dest_path}"
+            return f"{dest_path}"
         else:
             return content
 

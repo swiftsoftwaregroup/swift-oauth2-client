@@ -17,14 +17,14 @@ async def main():
         async with new_api_client_async(config, base_url) as client:
             # Make a GET request
             print("Making a GET request...")
-            response, status_code = await client.call_api("GET", "/api/user")
-            print(f"Response (status {status_code}):")
+            response, status_code, content_type = await client.call_api("GET", "/api/user")
+            print(f"Response (status {status_code}, content_type {content_type}):")
             print(response)
 
             # Make a POST request
             print("\nMaking a POST request...")
             data = {"name": "John Doe", "email": "john@example.com"}
-            response, status_code = await client.call_api("POST", "/api/user", body=data)
+            response, status_code, _ = await client.call_api("POST", "/api/user", body=data)
             print(f"Response (status {status_code}):")
             print(response)
 

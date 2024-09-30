@@ -55,7 +55,7 @@ def test_api_call_success(oauth2_config, base_url):
     )
 
     with new_api_client(oauth2_config, base_url) as client:
-        response, status_code = client.call_api("GET", "/api/test")
+        response, status_code, _ = client.call_api("GET", "/api/test")
         assert status_code == 200
         assert response == {"message": "Success"}
 
@@ -90,7 +90,7 @@ def test_download_file(oauth2_config, base_url, tmp_path):
     with new_api_client(oauth2_config, base_url) as client:
         dest_path = tmp_path / "downloaded_file.txt"
         result = client.download_file("GET", "/api/download", dest_path=dest_path)
-        assert result == f"File downloaded successfully as {dest_path}"
+        assert result == f"{dest_path}"
         assert dest_path.read_text() == "file content"
 
 @respx.mock
@@ -119,17 +119,17 @@ def test_different_content_types(oauth2_config, base_url):
 
     with new_api_client(oauth2_config, base_url) as client:
         # Test JSON response
-        response, status_code = client.call_api("GET", "/api/json")
+        response, status_code, _ = client.call_api("GET", "/api/json")
         assert status_code == 200
         assert response == {"key": "value"}
 
         # Test text response
-        response, status_code = client.call_api("GET", "/api/text")
+        response, status_code, _ = client.call_api("GET", "/api/text")
         assert status_code == 200
         assert response == "Hello, World!"
 
         # Test binary response
-        response, status_code = client.call_api("GET", "/api/binary")
+        response, status_code, _ = client.call_api("GET", "/api/binary")
         assert status_code == 200
         assert response == b"\x00\x01\x02"
 

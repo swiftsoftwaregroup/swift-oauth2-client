@@ -33,7 +33,7 @@ class APIClient:
         self.async_client = self._loop.run_until_complete(APIClientAsync(config, base_url).__aenter__())
         self.token_manager = TokenManager(self.async_client.token_manager, self._loop)
 
-    def call_api(self, method: str, path: str, body: Any = None, additional_headers: Optional[Dict[str, str]] = None) -> Tuple[Union[bytes, str, Dict], int]:
+    def call_api(self, method: str, path: str, body: Any = None, additional_headers: Optional[Dict[str, str]] = None) -> Tuple[Union[bytes, str, Dict], int, str]:
         """
         Make an API call.
 
@@ -44,12 +44,12 @@ class APIClient:
             additional_headers (Optional[Dict[str, str]], optional): Additional HTTP headers. Defaults to None.
 
         Returns:
-            Tuple[Union[bytes, str, Dict], int]: Response body and status code.
+            Tuple[Union[bytes, str, Dict], int, str]: Response body, status code, and content type.
 
         Example:
             ```python
-            response, status_code = client.call_api("GET", "/users")
-            print(f"Status: {status_code}, Response: {response}")
+            response, status, content_type = client.call_api("GET", "/users")
+            print(f"Status: {status}, Content-Type: {content_type}, Response: {response}")
             ```
         """
         return self._loop.run_until_complete(self.async_client.call_api(method, path, body, additional_headers))
